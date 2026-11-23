@@ -207,9 +207,9 @@ st.markdown(
 @st.cache_data
 def load_default_image() -> np.ndarray:
     candidates = [
-        os.path.join("assets", "foto_telur.jpg"),
-        os.path.join("assets", "foto_telur.png"),
-        "foto_telur.jpg",
+        os.path.join("assets/telur.png"),
+        os.path.join("assets/telur.png"),
+        "assets/telur.png",
     ]
     for path in candidates:
         if os.path.exists(path):
