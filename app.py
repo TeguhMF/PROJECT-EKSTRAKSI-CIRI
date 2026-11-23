@@ -237,9 +237,97 @@ def style_dark_axis(ax, title: str, xlabel: str, ylabel: str):
         spine.set_edgecolor("#1E293B")
 
 
+def build_summary_sheet_png(
+    img_rgb, img_gray, img_hist_eq, mask_final, segmented_egg, img_overlay, metrics: dict
+) -> bytes:
+    """Membuat 1 lembar gambar ringkasan beresolusi tinggi siap lampiran laporan."""
+    fig = plt.figure(figsize=(15, 9), dpi=220)
+    fig.patch.set_facecolor("#090D16")
+
+    fig.suptitle(
+        "RINGKASAN PIPELINE PENGOLAHAN CITRA DIGITAL & EKSTRAKSI CIRI OBJEK",
+        color="#F8FAFC",
+        fontsize=14,
+        fontweight="bold",
+        y=0.96,
+    )
+
+    gs = fig.add_gridspec(2, 4, hspace=0.28, wspace=0.18, left=0.04, right=0.96, top=0.89, bottom=0.06)
+
+    panels = [
+        (0, 0, img_rgb, "1. Citra Asli (RGB)", None),
+        (0, 1, img_gray, "2. Preprocessing: Grayscale", "gray"),
+        (0, 2, img_hist_eq, "3. Histogram Equalization", "gray"),
+        (1, 0, mask_final, "4. Mask Final (Morfologi)", "gray"),
+        (1, 1, segmented_egg, "5. Objek Terisolasi", None),
+        (1, 2, img_overlay, "6. Kontur, BBox & Sumbu Elips", None),
+    ]
+
+    for r, c, image, title, cmap in panels:
+        ax = fig.add_subplot(gs[r, c])
+        ax.imshow(image, cmap=cmap)
+        ax.set_title(title, color="#E2E8F0", fontsize=9.5, fontweight="bold", pad=6)
+        ax.axis("off")
+
+    # Panel Kanan: Ringkasan Kuantitatif Ekstraksi Ciri
+    ax_txt = fig.add_subplot(gs[:, 3])
+    ax_txt.set_facecolor("#0F172A")
+    ax_txt.set_xticks([])
+    ax_txt.set_yticks([])
+    for spine in ax_txt.spines.values():
+        spine.set_edgecolor("#2563EB")
+        spine.set_linewidth(1.5)
+
+    summary_lines = [
+        ("PARAMETER SEGMENTASI", True),
+        (f"Metode : {metrics['seg_mode']}", False),
+        (f"Threshold (S) : {metrics['thresh']:.1f}", False),
+        (f"Closing / Opening : {metrics['close']}px / {metrics['open']}px", False),
+        ("", False),
+        ("EKSTRAKSI CIRI WARNA", True),
+        (f"Mean R (Red)   : {metrics['mean_r']:.2f}", False),
+        (f"Mean G (Green) : {metrics['mean_g']:.2f}", False),
+        (f"Mean B (Blue)  : {metrics['mean_b']:.2f}", False),
+        (f"Kode Warna HEX : {metrics['hex']}", False),
+        ("", False),
+        ("EKSTRAKSI CIRI BENTUK", True),
+        (f"Area           : {metrics['area']:,.2f} px²", False),
+        (f"Perimeter      : {metrics['perimeter']:,.2f} px", False),
+        (f"Aspect Ratio   : {metrics['aspect_ratio']:.4f}", False),
+        (f"Circularity    : {metrics['circularity']:.4f}", False),
+        ("", False),
+        ("GEOMETRI ELIPS LANJUTAN", True),
+        (f"Major Axis     : {metrics['major_axis']:.2f} px", False),
+        (f"Minor Axis     : {metrics['minor_axis']:.2f} px", False),
+        (f"Eccentricity   : {metrics['eccentricity']:.4f}", False),
+    ]
+
+    y_pos = 0.94
+    for text, is_header in summary_lines:
+        if text == "":
+            y_pos -= 0.025
+            continue
+        ax_txt.text(
+            0.07,
+            y_pos,
+            text,
+            transform=ax_txt.transAxes,
+            color="#38BDF8" if is_header else "#F8FAFC",
+            fontsize=9.5 if is_header else 9,
+            fontweight="bold" if is_header else "normal",
+            family="monospace",
+        )
+        y_pos -= 0.043
+
+    buf = io.BytesIO()
+    fig.savefig(buf, format="PNG", facecolor=fig.get_facecolor())
+    plt.close(fig)
+    return buf.getvalue()
+
+
 img_rgb = load_default_image()
 if img_rgb is None:
-    st.error("File citra `assets/foto_telur.jpg` tidak ditemukan. Pastikan file tersebut berada di dalam folder `assets/`.")
+    st.error("File citra `assets/telur.png` tidak ditemukan. Pastikan file tersebut berada di dalam folder `assets/`.")
     st.stop()
 
 
@@ -318,7 +406,7 @@ manual_thresh = st.sidebar.slider(
     disabled=(seg_mode == "Auto Otsu Thresholding"),
 )
 
-st.sidebar.subheader("Parameter Morfologi")
+st.sidebar.subheader("Parameter Morfologi & Overlay")
 close_ksize = st.sidebar.slider(
     "Kernel Closing (Tutup Lubang Kilau)",
     min_value=3,
@@ -333,6 +421,7 @@ open_ksize = st.sidebar.slider(
     value=9,
     step=2,
 )
+show_ellipse_axes = st.sidebar.checkbox("Tampilkan Sumbu Elips (Major & Minor)", value=True)
 
 
 # ==============================================================================
@@ -355,7 +444,7 @@ else:
     clahe = cv2.createCLAHE(clipLimit=clahe_clip, tileGridSize=(8, 8))
     img_hist_eq = clahe.apply(img_gray)
 
-# 3. Segmentasi via Kanal Saturation (HSV)
+# 3. Segmentasi via Kanal Saturation (HSV) vs Pembanding Grayscale+HE
 img_hsv = cv2.cvtColor(img_filtered_bgr, cv2.COLOR_BGR2HSV)
 s_channel = img_hsv[:, :, 1]
 
@@ -367,6 +456,11 @@ else:
     thresh_used, mask_raw = cv2.threshold(
         s_channel, manual_thresh, 255, cv2.THRESH_BINARY
     )
+
+# Pembanding: Otsu langsung pada Grayscale + Histogram Equalization
+gray_otsu_val, mask_gray_eq_otsu = cv2.threshold(
+    img_hist_eq, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
+)
 
 # 4. Operasi Morfologi (Closing -> Opening -> Kontur Terbesar)
 kernel_close = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (close_ksize, close_ksize))
@@ -400,8 +494,9 @@ noise_removed_px = int(np.sum((mask_raw == 255) & (mask_final == 0)))
 
 # 5. Ekstraksi Ciri Warna (Mean R, Mean G, Mean B pada citra asli)
 mean_r, mean_g, mean_b, _ = cv2.mean(img_rgb, mask=mask_final)
+hex_color = f"#{int(mean_r):02x}{int(mean_g):02x}{int(mean_b):02x}"
 
-# 6. Ekstraksi Ciri Bentuk
+# 6. Ekstraksi Ciri Bentuk Utama & Geometri Elips Lanjutan
 area = cv2.contourArea(egg_contour)
 perimeter = cv2.arcLength(egg_contour, True)
 x, y, w, h = cv2.boundingRect(egg_contour)
@@ -409,10 +504,20 @@ aspect_ratio = float(w) / h if h > 0 else 0.0
 circularity = (4 * np.pi * area) / (perimeter ** 2) if perimeter > 0 else 0.0
 circ_delta = circularity - raw_circularity
 
-# Visualisasi Hasil Segmentasi, Alpha Blending, & Overlay Kontur
+# Ellipse Fitting (Major Axis, Minor Axis, Angle, Eccentricity)
+if len(egg_contour) >= 5:
+    (el_cx, el_cy), (axis_1, axis_2), el_angle = cv2.fitEllipse(egg_contour)
+    major_axis = max(axis_1, axis_2)
+    minor_axis = min(axis_1, axis_2)
+    eccentricity = np.sqrt(max(0.0, 1.0 - (minor_axis / major_axis) ** 2))
+else:
+    el_cx, el_cy = x + w / 2.0, y + h / 2.0
+    major_axis, minor_axis, el_angle = float(max(w, h)), float(min(w, h)), 0.0
+    eccentricity = 0.0
+
+# Visualisasi Hasil Segmentasi, Alpha Blending, & Overlay Kontur + Sumbu Elips
 segmented_egg = cv2.bitwise_and(img_rgb, img_rgb, mask=mask_final)
 
-# Alpha Blending Overlay: latar belakang diredupkan, area objek diberi tint biru halus
 alpha_blend = (img_rgb * 0.35).astype(np.uint8)
 tint_layer = img_rgb.copy()
 tint_layer[mask_final == 255] = (
@@ -424,6 +529,30 @@ cv2.drawContours(alpha_blend, [egg_contour], -1, (56, 189, 248), 3)
 img_overlay = img_rgb.copy()
 cv2.drawContours(img_overlay, [egg_contour], -1, (0, 255, 128), 4)
 cv2.rectangle(img_overlay, (x, y), (x + w, y + h), (56, 189, 248), 3)
+
+if show_ellipse_axes and len(egg_contour) >= 5:
+    theta_rad = np.deg2rad(el_angle)
+    # Sumbu Minor (axis_1 pada orientasi theta_rad)
+    dx1 = (axis_1 / 2.0) * np.cos(theta_rad)
+    dy1 = (axis_1 / 2.0) * np.sin(theta_rad)
+    # Sumbu Mayor (axis_2 tegak lurus theta_rad)
+    dx2 = -(axis_2 / 2.0) * np.sin(theta_rad)
+    dy2 = (axis_2 / 2.0) * np.cos(theta_rad)
+
+    cv2.line(
+        img_overlay,
+        (int(el_cx - dx1), int(el_cy - dy1)),
+        (int(el_cx + dx1), int(el_cy + dy1)),
+        (250, 204, 21),
+        2,
+    )
+    cv2.line(
+        img_overlay,
+        (int(el_cx - dx2), int(el_cy - dy2)),
+        (int(el_cx + dx2), int(el_cy + dy2)),
+        (244, 63, 94),
+        2,
+    )
 
 
 # ==============================================================================
@@ -485,7 +614,11 @@ if active_page == "01. Ringkasan & Akuisisi Citra":
     with col_b:
         st.image(alpha_blend, caption="2. Validasi Presisi Mask (Alpha Blending)", use_container_width=True)
     with col_c:
-        st.image(img_overlay, caption="3. Deteksi Kontur & Bounding Box", use_container_width=True)
+        st.image(
+            img_overlay,
+            caption="3. Kontur (Hijau), Bounding Box (Biru) & Sumbu Elips",
+            use_container_width=True,
+        )
 
 
 # ==============================================================================
@@ -500,7 +633,7 @@ elif active_page == "02. Preprocessing & Histogram":
                 <line x1="12" y1="20" x2="12" y2="4"></line>
                 <line x1="6" y1="20" x2="6" y2="14"></line>
             </svg>
-            Tahap Preprocessing: Grayscale, Histogram Equalization &amp; Analisis Distribusi
+            Tahap Preprocessing: Grayscale, Histogram Equalization &amp; Kanal HSV
         </div>
         """,
         unsafe_allow_html=True,
@@ -539,7 +672,7 @@ elif active_page == "02. Preprocessing & Histogram":
         unsafe_allow_html=True,
     )
 
-    fig_hist, ax_hist = plt.subplots(1, 3, figsize=(15, 3.8))
+    fig_hist, ax_hist = plt.subplots(1, 3, figsize=(15, 3.6))
     fig_hist.patch.set_facecolor("#090D16")
 
     ax_hist[0].hist(img_gray.ravel(), bins=256, range=(0, 256), color="#38BDF8", alpha=0.85)
@@ -576,6 +709,45 @@ elif active_page == "02. Preprocessing & Histogram":
 
     plt.tight_layout()
     st.pyplot(fig_hist)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <polyline points="8 7 3 12 8 17"></polyline>
+                <polyline points="16 7 21 12 16 17"></polyline>
+            </svg>
+            Profil Intensitas Garis Melintang Tengah Objek (Cross-Section Profile)
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    mid_row = int(el_cy)
+    fig_prof, ax_prof = plt.subplots(figsize=(14, 3.2))
+    fig_prof.patch.set_facecolor("#090D16")
+
+    x_coords = np.arange(img_rgb.shape[1])
+    ax_prof.plot(x_coords, img_gray[mid_row, :], color="#94A3B8", linewidth=1.6, label="Intensitas Grayscale")
+    ax_prof.plot(x_coords, s_channel[mid_row, :], color="#38BDF8", linewidth=2.0, label="Nilai Saturation (HSV)")
+    ax_prof.axhline(
+        thresh_used,
+        color="#F59E0B",
+        linestyle="--",
+        linewidth=1.5,
+        label=f"Batas Threshold S ({thresh_used:.1f})",
+    )
+    ax_prof.legend(facecolor="#0F172A", edgecolor="#334155", labelcolor="#F8FAFC", fontsize=8.5, loc="upper right")
+    style_dark_axis(
+        ax_prof,
+        f"Profil Piksel Horizontal pada Baris y = {mid_row} px (Melewati Cangkang, Kilau Flash & Bayangan)",
+        "Posisi Koordinat X (piksel dari kiri ke kanan)",
+        "Nilai Intensitas / Saturasi (0–255)",
+    )
+    plt.tight_layout()
+    st.pyplot(fig_prof)
 
 
 # ==============================================================================
@@ -635,6 +807,36 @@ elif active_page == "03. Segmentasi & Morfologi":
         )
 
     st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            Komparasi Metode: Mengapa Memilih Kanal Saturation (HSV) Dibanding Grayscale + HE?
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    cmp1, cmp2 = st.columns(2)
+    with cmp1:
+        st.image(
+            mask_gray_eq_otsu,
+            caption=f"Pembanding: Otsu pada Grayscale + HE (Threshold={gray_otsu_val:.1f}) — Terkontaminasi Kilau Latar",
+            use_container_width=True,
+        )
+    with cmp2:
+        st.image(
+            mask_final,
+            caption=f"Metode Terpilih: Otsu pada Kanal Saturation (HSV) + Morfologi — Bebas Noise & Bayangan",
+            use_container_width=True,
+        )
+
+    st.markdown("<br>", unsafe_allow_html=True)
     o1, o2, o3 = st.columns(3)
     with o1:
         st.image(segmented_egg, caption="Objek Terisolasi (Area Perhitungan RGB)", use_container_width=True)
@@ -655,7 +857,7 @@ elif active_page == "03. Segmentasi & Morfologi":
             use_container_width=True,
         )
     with o3:
-        st.image(img_overlay, caption="Overlay Kontur (Hijau) & Bounding Box (Biru)", use_container_width=True)
+        st.image(img_overlay, caption="Overlay Kontur, BBox & Sumbu Elips", use_container_width=True)
         st.download_button(
             label="Unduh Visualisasi Kontur (.PNG)",
             data=convert_np_to_png_bytes(img_overlay),
@@ -688,7 +890,6 @@ elif active_page == "04. Ekstraksi Ciri & Laporan":
     w2.metric("Mean G (Green)", f"{mean_g:.2f}")
     w3.metric("Mean B (Blue)", f"{mean_b:.2f}")
 
-    hex_color = f"#{int(mean_r):02x}{int(mean_g):02x}{int(mean_b):02x}"
     with w4:
         st.markdown(
             f"""
@@ -719,7 +920,6 @@ elif active_page == "04. Ekstraksi Ciri & Laporan":
             unsafe_allow_html=True,
         )
 
-    # Histogram Distribusi Kanal RGB Khusus pada Area Mask Objek
     st.markdown("<br>", unsafe_allow_html=True)
     fig_rgb, ax_rgb = plt.subplots(figsize=(12, 3.4))
     fig_rgb.patch.set_facecolor("#090D16")
@@ -764,7 +964,7 @@ elif active_page == "04. Ekstraksi Ciri & Laporan":
                 <line x1="12" y1="22" x2="12" y2="15.5"></line>
                 <polyline points="22 8.5 12 15.5 2 8.5"></polyline>
             </svg>
-            Ekstraksi Ciri Bentuk &amp; Formulasi Matematis
+            Ekstraksi Ciri Bentuk &amp; Geometri Elips Lanjutan
         </div>
         """,
         unsafe_allow_html=True,
@@ -776,7 +976,12 @@ elif active_page == "04. Ekstraksi Ciri & Laporan":
     b3.metric("Aspect Ratio", f"{aspect_ratio:.4f}", help=f"Lebar = {w} px, Tinggi = {h} px")
     b4.metric("Circularity", f"{circularity:.4f}", help="1.0000 = Lingkaran Sempurna")
 
-    # Formulasi Matematis & Interpretasi Otomatis
+    e1, e2, e3 = st.columns(3)
+    e1.metric("Major Axis (Sumbu Panjang)", f"{major_axis:.2f} px")
+    e2.metric("Minor Axis (Sumbu Pendek)", f"{minor_axis:.2f} px")
+    e3.metric("Eccentricity (Kelonjongan)", f"{eccentricity:.4f}", help="0 = lingkaran sempurna, mendekati 1 = sangat lonjong")
+
+    st.markdown("<br>", unsafe_allow_html=True)
     f_col1, f_col2 = st.columns([1.15, 1])
     with f_col1:
         st.markdown("**Formulasi Perhitungan Ciri:**")
@@ -811,7 +1016,7 @@ elif active_page == "04. Ekstraksi Ciri & Laporan":
                 <div class="insight-title">Interpretasi Otomatis Karakteristik Objek</div>
                 <p class="insight-body">
                     <b>1. Karakteristik Warna:</b> Dominasi kanal merah (<b>R = {mean_r:.2f}</b>) diikuti hijau (<b>G = {mean_g:.2f}</b>) dan biru rendah (<b>B = {mean_b:.2f}</b>) merepresentasikan warna cokelat-oranye hangat khas cangkang telur.<br><br>
-                    <b>2. Karakteristik Geometri:</b> Nilai <b>Aspect Ratio = {aspect_ratio:.4f}</b> menunjukkan proporsi objek {orientasi}, sedangkan <b>Circularity = {circularity:.4f}</b> mengonfirmasi kontur objek {bentuk_desc}.
+                    <b>2. Karakteristik Geometri:</b> Nilai <b>Aspect Ratio = {aspect_ratio:.4f}</b> menunjukkan proporsi objek {orientasi}, sedangkan <b>Circularity = {circularity:.4f}</b> dan <b>Eccentricity = {eccentricity:.4f}</b> mengonfirmasi kontur objek {bentuk_desc}.
                 </p>
             </div>
             """,
@@ -828,7 +1033,7 @@ elif active_page == "04. Ekstraksi Ciri & Laporan":
                 <line x1="16" y1="13" x2="8" y2="13"></line>
                 <line x1="16" y1="17" x2="8" y2="17"></line>
             </svg>
-            Tabel Hasil Ekstraksi Ciri untuk Laporan
+            Tabel Ringkasan &amp; Ekspor Lampiran Laporan
         </div>
         """,
         unsafe_allow_html=True,
@@ -836,22 +1041,57 @@ elif active_page == "04. Ekstraksi Ciri & Laporan":
 
     df_hasil = pd.DataFrame(
         [
-            {"Kategori": "Ciri Warna", "Parameter": "Mean R (Red)", "Nilai": round(mean_r, 2), "Satuan": "Intensitas (0–255)"},
-            {"Kategori": "Ciri Warna", "Parameter": "Mean G (Green)", "Nilai": round(mean_g, 2), "Satuan": "Intensitas (0–255)"},
-            {"Kategori": "Ciri Warna", "Parameter": "Mean B (Blue)", "Nilai": round(mean_b, 2), "Satuan": "Intensitas (0–255)"},
-            {"Kategori": "Ciri Bentuk", "Parameter": "Area", "Nilai": round(area, 2), "Satuan": "piksel²"},
-            {"Kategori": "Ciri Bentuk", "Parameter": "Perimeter", "Nilai": round(perimeter, 2), "Satuan": "piksel"},
-            {"Kategori": "Ciri Bentuk", "Parameter": "Aspect Ratio", "Nilai": round(aspect_ratio, 4), "Satuan": "Rasio (w / h)"},
-            {"Kategori": "Ciri Bentuk", "Parameter": "Circularity", "Nilai": round(circularity, 4), "Satuan": "Indeks (0–1)"},
+            {"Kategori": "Ciri Warna (Wajib)", "Parameter": "Mean R (Red)", "Nilai": round(mean_r, 2), "Satuan": "Intensitas (0–255)"},
+            {"Kategori": "Ciri Warna (Wajib)", "Parameter": "Mean G (Green)", "Nilai": round(mean_g, 2), "Satuan": "Intensitas (0–255)"},
+            {"Kategori": "Ciri Warna (Wajib)", "Parameter": "Mean B (Blue)", "Nilai": round(mean_b, 2), "Satuan": "Intensitas (0–255)"},
+            {"Kategori": "Ciri Bentuk (Wajib)", "Parameter": "Area", "Nilai": round(area, 2), "Satuan": "piksel²"},
+            {"Kategori": "Ciri Bentuk (Wajib)", "Parameter": "Perimeter", "Nilai": round(perimeter, 2), "Satuan": "piksel"},
+            {"Kategori": "Ciri Bentuk (Wajib)", "Parameter": "Aspect Ratio", "Nilai": round(aspect_ratio, 4), "Satuan": "Rasio (w / h)"},
+            {"Kategori": "Ciri Bentuk (Wajib)", "Parameter": "Circularity", "Nilai": round(circularity, 4), "Satuan": "Indeks (0–1)"},
+            {"Kategori": "Geometri Elips (Tambahan)", "Parameter": "Major Axis", "Nilai": round(major_axis, 2), "Satuan": "piksel"},
+            {"Kategori": "Geometri Elips (Tambahan)", "Parameter": "Minor Axis", "Nilai": round(minor_axis, 2), "Satuan": "piksel"},
+            {"Kategori": "Geometri Elips (Tambahan)", "Parameter": "Eccentricity", "Nilai": round(eccentricity, 4), "Satuan": "Indeks (0–1)"},
         ]
     )
 
     st.dataframe(df_hasil, use_container_width=True, hide_index=True)
 
-    csv_data = df_hasil.to_csv(index=False).encode("utf-8")
-    st.download_button(
-        label="Ekspor Tabel Ekstraksi Ciri (.CSV)",
-        data=csv_data,
-        file_name="hasil_ekstraksi_ciri_telur.csv",
-        mime="text/csv",
+    summary_metrics = {
+        "seg_mode": seg_mode,
+        "thresh": thresh_used,
+        "close": close_ksize,
+        "open": open_ksize,
+        "mean_r": mean_r,
+        "mean_g": mean_g,
+        "mean_b": mean_b,
+        "hex": hex_color.upper(),
+        "area": area,
+        "perimeter": perimeter,
+        "aspect_ratio": aspect_ratio,
+        "circularity": circularity,
+        "major_axis": major_axis,
+        "minor_axis": minor_axis,
+        "eccentricity": eccentricity,
+    }
+    summary_png_bytes = build_summary_sheet_png(
+        img_rgb, img_gray, img_hist_eq, mask_final, segmented_egg, img_overlay, summary_metrics
     )
+
+    dl1, dl2 = st.columns(2)
+    with dl1:
+        csv_data = df_hasil.to_csv(index=False).encode("utf-8")
+        st.download_button(
+            label="Ekspor Tabel Ekstraksi Ciri (.CSV)",
+            data=csv_data,
+            file_name="hasil_ekstraksi_ciri_telur.csv",
+            mime="text/csv",
+            use_container_width=True,
+        )
+    with dl2:
+        st.download_button(
+            label="Unduh Lembar Ringkasan Lengkap Siap Laporan (.PNG)",
+            data=summary_png_bytes,
+            file_name="summary_sheet_pcd_telur.png",
+            mime="image/png",
+            use_container_width=True,
+        )
