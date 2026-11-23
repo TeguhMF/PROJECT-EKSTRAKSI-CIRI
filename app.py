@@ -11,7 +11,7 @@ from PIL import Image
 # KONFIGURASI HALAMAN STREAMLIT
 # ==============================================================================
 st.set_page_config(
-    page_title="PCD Analytics — Ekstraksi Ciri Objek",
+    page_title="PCD Vision Lab — Ekstraksi Ciri Objek",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -124,6 +124,31 @@ st.markdown(
         border-bottom: 1px solid #1E293B;
     }
 
+    /* Kartu Analisis & Interpretasi */
+    .insight-card {
+        background-color: #0F172A;
+        border: 1px solid #1E293B;
+        border-left: 4px solid #38BDF8;
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+        margin-top: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    .insight-title {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #38BDF8;
+        margin-bottom: 0.45rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    .insight-body {
+        font-size: 0.9rem;
+        color: #E2E8F0;
+        line-height: 1.6;
+        margin: 0;
+    }
+
     /* Kartu Metrik (st.metric) */
     div[data-testid="stMetric"] {
         background-color: #0F172A;
@@ -140,7 +165,7 @@ st.markdown(
     }
     div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
         color: #F8FAFC !important;
-        font-size: 1.4rem !important;
+        font-size: 1.38rem !important;
         font-weight: 700 !important;
     }
 
@@ -182,9 +207,9 @@ st.markdown(
 @st.cache_data
 def load_default_image() -> np.ndarray:
     candidates = [
-        os.path.join("assets", "assets/telur.png"),
-        os.path.join("assets", "assets/telur.png"),
-        "assets/telur.png",
+        os.path.join("assets", "foto_telur.jpg"),
+        os.path.join("assets", "foto_telur.png"),
+        "foto_telur.jpg",
     ]
     for path in candidates:
         if os.path.exists(path):
@@ -214,7 +239,7 @@ def style_dark_axis(ax, title: str, xlabel: str, ylabel: str):
 
 img_rgb = load_default_image()
 if img_rgb is None:
-    st.error("File citra `assets/telur.png` tidak ditemukan. Pastikan file tersebut berada di dalam folder `assets/`.")
+    st.error("File citra `assets/foto_telur.jpg` tidak ditemukan. Pastikan file tersebut berada di dalam folder `assets/`.")
     st.stop()
 
 
@@ -360,6 +385,19 @@ egg_contour = max(contours, key=cv2.contourArea)
 mask_final = np.zeros_like(mask_clean)
 cv2.drawContours(mask_final, [egg_contour], -1, 255, thickness=cv2.FILLED)
 
+# Komparasi Kuantitatif Sebelum vs Sesudah Morfologi
+raw_contours, _ = cv2.findContours(mask_raw, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+if len(raw_contours) > 0:
+    raw_main_cnt = max(raw_contours, key=cv2.contourArea)
+    raw_area = cv2.contourArea(raw_main_cnt)
+    raw_perim = cv2.arcLength(raw_main_cnt, True)
+    raw_circularity = (4 * np.pi * raw_area) / (raw_perim ** 2) if raw_perim > 0 else 0.0
+else:
+    raw_circularity = 0.0
+
+holes_filled_px = int(np.sum((mask_final == 255) & (mask_raw == 0)))
+noise_removed_px = int(np.sum((mask_raw == 255) & (mask_final == 0)))
+
 # 5. Ekstraksi Ciri Warna (Mean R, Mean G, Mean B pada citra asli)
 mean_r, mean_g, mean_b, _ = cv2.mean(img_rgb, mask=mask_final)
 
@@ -369,9 +407,20 @@ perimeter = cv2.arcLength(egg_contour, True)
 x, y, w, h = cv2.boundingRect(egg_contour)
 aspect_ratio = float(w) / h if h > 0 else 0.0
 circularity = (4 * np.pi * area) / (perimeter ** 2) if perimeter > 0 else 0.0
+circ_delta = circularity - raw_circularity
 
-# Visualisasi Hasil Segmentasi & Kontur (Tanpa Titik Biru Centroid)
+# Visualisasi Hasil Segmentasi, Alpha Blending, & Overlay Kontur
 segmented_egg = cv2.bitwise_and(img_rgb, img_rgb, mask=mask_final)
+
+# Alpha Blending Overlay: latar belakang diredupkan, area objek diberi tint biru halus
+alpha_blend = (img_rgb * 0.35).astype(np.uint8)
+tint_layer = img_rgb.copy()
+tint_layer[mask_final == 255] = (
+    0.72 * img_rgb[mask_final == 255] + 0.28 * np.array([37, 99, 235])
+).astype(np.uint8)
+alpha_blend[mask_final == 255] = tint_layer[mask_final == 255]
+cv2.drawContours(alpha_blend, [egg_contour], -1, (56, 189, 248), 3)
+
 img_overlay = img_rgb.copy()
 cv2.drawContours(img_overlay, [egg_contour], -1, (0, 255, 128), 4)
 cv2.rectangle(img_overlay, (x, y), (x + w, y + h), (56, 189, 248), 3)
@@ -397,7 +446,7 @@ st.markdown(
         </div>
         <div class="status-pill">
             <div style="color:#60A5FA; font-weight:600;">Status Pipeline Aktif</div>
-            <div>Threshold S: <b>{thresh_used:.1f}</b> | Closing: <b>{close_ksize}px</b></div>
+            <div>Threshold S: <b>{thresh_used:.1f}</b> | Closing: <b>{close_ksize}px</b> | Opening: <b>{open_ksize}px</b></div>
         </div>
     </div>
     """,
@@ -427,14 +476,14 @@ if active_page == "01. Ringkasan & Akuisisi Citra":
     k1.metric("Resolusi Citra", f"{img_rgb.shape[1]} x {img_rgb.shape[0]} px")
     k2.metric("Mean RGB Objek", f"{mean_r:.0f}, {mean_g:.0f}, {mean_b:.0f}")
     k3.metric("Luas Objek (Area)", f"{area:,.0f} px²")
-    k4.metric("Circularity", f"{circularity:.4f}")
+    k4.metric("Circularity", f"{circularity:.4f}", delta=f"{circ_delta:+.4f} pasca morfologi")
 
     st.markdown("<br>", unsafe_allow_html=True)
     col_a, col_b, col_c = st.columns(3)
     with col_a:
-        st.image(img_rgb, caption="1. Citra Asli (RGB)", use_container_width=True)
+        st.image(img_rgb, caption="1. Citra Asli (Akuisisi Mandiri)", use_container_width=True)
     with col_b:
-        st.image(segmented_egg, caption="2. Hasil Segmentasi & Morfologi", use_container_width=True)
+        st.image(alpha_blend, caption="2. Validasi Presisi Mask (Alpha Blending)", use_container_width=True)
     with col_c:
         st.image(img_overlay, caption="3. Deteksi Kontur & Bounding Box", use_container_width=True)
 
@@ -493,7 +542,6 @@ elif active_page == "02. Preprocessing & Histogram":
     fig_hist, ax_hist = plt.subplots(1, 3, figsize=(15, 3.8))
     fig_hist.patch.set_facecolor("#090D16")
 
-    # Histogram 1: Grayscale setelah Median Blur
     ax_hist[0].hist(img_gray.ravel(), bins=256, range=(0, 256), color="#38BDF8", alpha=0.85)
     style_dark_axis(
         ax_hist[0],
@@ -502,7 +550,6 @@ elif active_page == "02. Preprocessing & Histogram":
         "Jumlah Piksel",
     )
 
-    # Histogram 2: Hasil Equalization / CLAHE
     ax_hist[1].hist(img_hist_eq.ravel(), bins=256, range=(0, 256), color="#2563EB", alpha=0.9)
     style_dark_axis(
         ax_hist[1],
@@ -511,7 +558,6 @@ elif active_page == "02. Preprocessing & Histogram":
         "Jumlah Piksel",
     )
 
-    # Histogram 3: Kanal Saturation + Garis Ambang Threshold Aktif
     ax_hist[2].hist(s_channel.ravel(), bins=256, range=(0, 256), color="#10B981", alpha=0.8)
     ax_hist[2].axvline(
         thresh_used,
@@ -544,12 +590,30 @@ elif active_page == "03. Segmentasi & Morfologi":
                 <polyline points="2 17 12 22 22 17"></polyline>
                 <polyline points="2 12 12 17 22 12"></polyline>
             </svg>
-            Transformasi Mask Biner: Thresholding ke Operasi Morfologi
+            Komparasi Kuantitatif &amp; Transformasi Morfologi
         </div>
         """,
         unsafe_allow_html=True,
     )
 
+    d1, d2, d3 = st.columns(3)
+    d1.metric(
+        "Lubang Kilau Tertutup (Closing)",
+        f"{holes_filled_px:,} px",
+        help="Jumlah piksel di dalam objek akibat pantulan flash yang berhasil ditambal operasi Closing.",
+    )
+    d2.metric(
+        "Noise Latar Dihapus (Opening)",
+        f"{noise_removed_px:,} px",
+        help="Jumlah piksel noise di luar objek utama yang dibersihkan operasi Opening.",
+    )
+    d3.metric(
+        "Circularity (Sebelum -> Sesudah)",
+        f"{circularity:.4f}",
+        delta=f"{circ_delta:+.4f} (Awal: {raw_circularity:.4f})",
+    )
+
+    st.markdown("<br>", unsafe_allow_html=True)
     m1, m2, m3 = st.columns(3)
     with m1:
         st.image(
@@ -560,7 +624,7 @@ elif active_page == "03. Segmentasi & Morfologi":
     with m2:
         st.image(
             mask_closed,
-            caption=f"2. Setelah Closing ({close_ksize}x{close_ksize}) — Lubang Kilau Tertutup",
+            caption=f"2. Setelah Closing ({close_ksize}x{close_ksize}) — Lubang Tertutup",
             use_container_width=True,
         )
     with m3:
@@ -571,7 +635,7 @@ elif active_page == "03. Segmentasi & Morfologi":
         )
 
     st.markdown("<br>", unsafe_allow_html=True)
-    o1, o2 = st.columns(2)
+    o1, o2, o3 = st.columns(3)
     with o1:
         st.image(segmented_egg, caption="Objek Terisolasi (Area Perhitungan RGB)", use_container_width=True)
         st.download_button(
@@ -582,7 +646,16 @@ elif active_page == "03. Segmentasi & Morfologi":
             use_container_width=True,
         )
     with o2:
-        st.image(img_overlay, caption="Overlay Kontur Eksternal (Hijau) & Bounding Box (Biru)", use_container_width=True)
+        st.image(alpha_blend, caption="Validasi Tepi Segmentasi (Alpha Blending)", use_container_width=True)
+        st.download_button(
+            label="Unduh Alpha Blending (.PNG)",
+            data=convert_np_to_png_bytes(alpha_blend),
+            file_name="validasi_tepi_telur.png",
+            mime="image/png",
+            use_container_width=True,
+        )
+    with o3:
+        st.image(img_overlay, caption="Overlay Kontur (Hijau) & Bounding Box (Biru)", use_container_width=True)
         st.download_button(
             label="Unduh Visualisasi Kontur (.PNG)",
             data=convert_np_to_png_bytes(img_overlay),
@@ -646,6 +719,42 @@ elif active_page == "04. Ekstraksi Ciri & Laporan":
             unsafe_allow_html=True,
         )
 
+    # Histogram Distribusi Kanal RGB Khusus pada Area Mask Objek
+    st.markdown("<br>", unsafe_allow_html=True)
+    fig_rgb, ax_rgb = plt.subplots(figsize=(12, 3.4))
+    fig_rgb.patch.set_facecolor("#090D16")
+
+    obj_pixels_r = img_rgb[:, :, 0][mask_final == 255]
+    obj_pixels_g = img_rgb[:, :, 1][mask_final == 255]
+    obj_pixels_b = img_rgb[:, :, 2][mask_final == 255]
+
+    bins = np.arange(257)
+    hist_r, _ = np.histogram(obj_pixels_r, bins=bins)
+    hist_g, _ = np.histogram(obj_pixels_g, bins=bins)
+    hist_b, _ = np.histogram(obj_pixels_b, bins=bins)
+
+    ax_rgb.plot(hist_r, color="#EF4444", linewidth=2, label=f"Red (Mean = {mean_r:.2f})")
+    ax_rgb.fill_between(range(256), hist_r, color="#EF4444", alpha=0.14)
+    ax_rgb.axvline(mean_r, color="#EF4444", linestyle="--", linewidth=1.3)
+
+    ax_rgb.plot(hist_g, color="#22C55E", linewidth=2, label=f"Green (Mean = {mean_g:.2f})")
+    ax_rgb.fill_between(range(256), hist_g, color="#22C55E", alpha=0.14)
+    ax_rgb.axvline(mean_g, color="#22C55E", linestyle="--", linewidth=1.3)
+
+    ax_rgb.plot(hist_b, color="#3B82F6", linewidth=2, label=f"Blue (Mean = {mean_b:.2f})")
+    ax_rgb.fill_between(range(256), hist_b, color="#3B82F6", alpha=0.14)
+    ax_rgb.axvline(mean_b, color="#3B82F6", linestyle="--", linewidth=1.3)
+
+    ax_rgb.legend(facecolor="#0F172A", edgecolor="#334155", labelcolor="#F8FAFC", fontsize=8.5)
+    style_dark_axis(
+        ax_rgb,
+        "Distribusi Intensitas Kanal R, G, B Khusus pada Area Objek Tersegmentasi",
+        "Intensitas Warna (0–255)",
+        "Jumlah Piksel Objek",
+    )
+    plt.tight_layout()
+    st.pyplot(fig_rgb)
+
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown(
         """
@@ -655,7 +764,7 @@ elif active_page == "04. Ekstraksi Ciri & Laporan":
                 <line x1="12" y1="22" x2="12" y2="15.5"></line>
                 <polyline points="22 8.5 12 15.5 2 8.5"></polyline>
             </svg>
-            Ekstraksi Ciri Bentuk (Area, Perimeter, Aspect Ratio, Circularity)
+            Ekstraksi Ciri Bentuk &amp; Formulasi Matematis
         </div>
         """,
         unsafe_allow_html=True,
@@ -666,6 +775,48 @@ elif active_page == "04. Ekstraksi Ciri & Laporan":
     b2.metric("Perimeter", f"{perimeter:,.2f} px")
     b3.metric("Aspect Ratio", f"{aspect_ratio:.4f}", help=f"Lebar = {w} px, Tinggi = {h} px")
     b4.metric("Circularity", f"{circularity:.4f}", help="1.0000 = Lingkaran Sempurna")
+
+    # Formulasi Matematis & Interpretasi Otomatis
+    f_col1, f_col2 = st.columns([1.15, 1])
+    with f_col1:
+        st.markdown("**Formulasi Perhitungan Ciri:**")
+        st.latex(
+            r"\text{Mean } C = \frac{1}{N} \sum_{(x,y) \in \text{Objek}} I_C(x,y), \quad C \in \{R, G, B\}"
+        )
+        st.latex(
+            r"\text{Aspect Ratio} = \frac{W_{\text{bbox}}}{H_{\text{bbox}}} = \frac{"
+            + f"{w}"
+            + r"}{"
+            + f"{h}"
+            + r"} = "
+            + f"{aspect_ratio:.4f}"
+        )
+        st.latex(
+            r"\text{Circularity} = \frac{4\pi \times \text{Area}}{\text{Perimeter}^2} = \frac{4\pi \times "
+            + f"{area:.2f}"
+            + r"}{("
+            + f"{perimeter:.2f}"
+            + r")^2} = "
+            + f"{circularity:.4f}"
+        )
+
+    with f_col2:
+        orientasi = "lonjong vertikal (tinggi > lebar)" if aspect_ratio < 0.95 else (
+            "lonjong horizontal (lebar > tinggi)" if aspect_ratio > 1.05 else "simetris (lebar ≈ tinggi)"
+        )
+        bentuk_desc = "mendekati elips/oval mulus" if circularity >= 0.80 else "cenderung memanjang atau tepi tidak beraturan"
+        st.markdown(
+            f"""
+            <div class="insight-card">
+                <div class="insight-title">Interpretasi Otomatis Karakteristik Objek</div>
+                <p class="insight-body">
+                    <b>1. Karakteristik Warna:</b> Dominasi kanal merah (<b>R = {mean_r:.2f}</b>) diikuti hijau (<b>G = {mean_g:.2f}</b>) dan biru rendah (<b>B = {mean_b:.2f}</b>) merepresentasikan warna cokelat-oranye hangat khas cangkang telur.<br><br>
+                    <b>2. Karakteristik Geometri:</b> Nilai <b>Aspect Ratio = {aspect_ratio:.4f}</b> menunjukkan proporsi objek {orientasi}, sedangkan <b>Circularity = {circularity:.4f}</b> mengonfirmasi kontur objek {bentuk_desc}.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown(
