@@ -182,9 +182,9 @@ st.markdown(
 @st.cache_data
 def load_default_image() -> np.ndarray:
     candidates = [
-        os.path.join("assets", "foto_telur.jpg"),
-        os.path.join("assets", "foto_telur.png"),
-        "foto_telur.jpg",
+        os.path.join("assets", "assets/telur.png"),
+        os.path.join("assets", "assets/telur.png"),
+        "assets/telur.png",
     ]
     for path in candidates:
         if os.path.exists(path):
@@ -214,7 +214,7 @@ def style_dark_axis(ax, title: str, xlabel: str, ylabel: str):
 
 img_rgb = load_default_image()
 if img_rgb is None:
-    st.error("File citra `assets/foto_telur.jpg` tidak ditemukan. Pastikan file tersebut berada di dalam folder `assets/`.")
+    st.error("File citra `assets/telur.png` tidak ditemukan. Pastikan file tersebut berada di dalam folder `assets/`.")
     st.stop()
 
 
