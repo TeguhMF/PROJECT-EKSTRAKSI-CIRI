@@ -31,62 +31,96 @@ st.markdown(
         background-color: #0F172A;
         border-right: 1px solid #1E293B;
     }
-    section[data-testid="stSidebar"] .stMarkdown h2,
     section[data-testid="stSidebar"] .stMarkdown h3 {
-        color: #E2E8F0;
-        font-size: 0.95rem;
-        letter-spacing: 0.03em;
+        color: #94A3B8;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
+        margin-top: 0.5rem;
+        margin-bottom: 0.4rem;
     }
 
-    /* Hero Banner Presentasi */
-    .hero-banner {
-        background: linear-gradient(135deg, #0F172A 0%, #0B1324 65%, #111F3D 100%);
+    /* Styling Sidebar Radio sebagai Vertical Navbar */
+    section[data-testid="stSidebar"] div[role="radiogroup"] > label {
+        background-color: #0B1120;
+        border: 1px solid #1E293B;
+        border-radius: 8px;
+        padding: 0.55rem 0.85rem;
+        margin-bottom: 0.35rem;
+        transition: all 0.18s ease;
+        cursor: pointer;
+    }
+    section[data-testid="stSidebar"] div[role="radiogroup"] > label:hover {
+        border-color: #3B82F6;
+        background-color: #131E36;
+    }
+    section[data-testid="stSidebar"] div[role="radiogroup"] > label[data-checked="true"],
+    section[data-testid="stSidebar"] div[role="radiogroup"] > label:has(input:checked) {
+        background: linear-gradient(90deg, rgba(37, 99, 235, 0.25) 0%, rgba(15, 23, 42, 0.95) 100%);
+        border: 1px solid #2563EB;
+        border-left: 4px solid #38BDF8;
+    }
+
+    /* Top Header Banner */
+    .top-header {
+        background: linear-gradient(135deg, #0F172A 0%, #0B1324 60%, #112042 100%);
         border: 1px solid #1E293B;
         border-left: 4px solid #2563EB;
         border-radius: 12px;
-        padding: 1.4rem 1.75rem;
+        padding: 1.25rem 1.6rem;
         margin-bottom: 1.25rem;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
     }
-    .hero-badge {
+    .header-tag {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        background-color: rgba(37, 99, 235, 0.16);
+        background-color: rgba(37, 99, 235, 0.18);
         color: #60A5FA;
         border: 1px solid rgba(59, 130, 246, 0.35);
         padding: 3px 10px;
         border-radius: 999px;
-        font-size: 0.75rem;
+        font-size: 0.72rem;
         font-weight: 600;
         letter-spacing: 0.05em;
-        margin-bottom: 0.6rem;
+        margin-bottom: 0.45rem;
     }
-    .hero-title {
-        font-size: 1.55rem;
+    .header-title {
+        font-size: 1.45rem;
         font-weight: 700;
         color: #F8FAFC;
-        margin: 0 0 0.35rem 0;
-        line-height: 1.3;
+        margin: 0 0 0.25rem 0;
     }
-    .hero-subtitle {
-        font-size: 0.92rem;
+    .header-desc {
+        font-size: 0.88rem;
         color: #94A3B8;
         margin: 0;
     }
+    .status-pill {
+        background-color: #090D16;
+        border: 1px solid #1E3A8A;
+        border-radius: 8px;
+        padding: 0.55rem 0.9rem;
+        font-size: 0.8rem;
+        color: #CBD5E1;
+    }
 
-    /* Section Header dengan Ikon SVG */
-    .section-header {
+    /* Section Title dengan Ikon SVG */
+    .section-title {
         display: flex;
         align-items: center;
-        gap: 10px;
-        font-size: 1.1rem;
+        gap: 9px;
+        font-size: 1.05rem;
         font-weight: 600;
         color: #F1F5F9;
-        padding-bottom: 0.5rem;
-        margin-top: 0.25rem;
-        margin-bottom: 1rem;
+        padding-bottom: 0.45rem;
+        margin-top: 0.2rem;
+        margin-bottom: 0.95rem;
         border-bottom: 1px solid #1E293B;
     }
 
@@ -96,54 +130,31 @@ st.markdown(
         border: 1px solid #1E293B;
         border-top: 3px solid #2563EB;
         border-radius: 10px;
-        padding: 0.9rem 1.1rem;
+        padding: 0.85rem 1.05rem;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
     }
     div[data-testid="stMetric"] label {
         color: #94A3B8 !important;
-        font-size: 0.82rem !important;
+        font-size: 0.8rem !important;
         font-weight: 500 !important;
     }
     div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
         color: #F8FAFC !important;
-        font-size: 1.45rem !important;
+        font-size: 1.4rem !important;
         font-weight: 700 !important;
     }
 
-    /* Styling Tabs */
-    button[data-baseweb="tab"] {
-        background-color: transparent !important;
-        color: #94A3B8 !important;
-        font-weight: 600 !important;
-        font-size: 0.92rem !important;
-        padding: 0.65rem 1.1rem !important;
-        border-bottom: 2px solid transparent !important;
-    }
-    button[data-baseweb="tab"][aria-selected="true"] {
-        color: #38BDF8 !important;
-        border-bottom: 2px solid #2563EB !important;
-    }
-
-    /* Tombol Utama & Download */
-    .stDownloadButton button, .stButton button {
+    /* Tombol Download */
+    .stDownloadButton button {
         background-color: #2563EB !important;
         color: #FFFFFF !important;
         border: 1px solid #3B82F6 !important;
         border-radius: 8px !important;
         font-weight: 600 !important;
-        transition: all 0.2s ease;
     }
-    .stDownloadButton button:hover, .stButton button:hover {
+    .stDownloadButton button:hover {
         background-color: #1D4ED8 !important;
         border-color: #60A5FA !important;
-    }
-
-    /* Info Box */
-    div[data-testid="stAlert"] {
-        background-color: #0F172A;
-        border: 1px solid #1E3A8A;
-        color: #E2E8F0;
-        border-radius: 10px;
     }
 
     /* Frame Gambar */
@@ -151,13 +162,13 @@ st.markdown(
         background-color: #0F172A;
         border: 1px solid #1E293B;
         border-radius: 10px;
-        padding: 0.5rem;
+        padding: 0.45rem;
     }
     div[data-testid="stImage"] figcaption {
         color: #CBD5E1 !important;
-        font-size: 0.82rem !important;
+        font-size: 0.8rem !important;
         font-weight: 500;
-        padding-top: 0.4rem;
+        padding-top: 0.35rem;
     }
     </style>
     """,
@@ -166,8 +177,23 @@ st.markdown(
 
 
 # ==============================================================================
-# FUNGSI BANTUAN VISUALISASI & KONVERSI
+# FUNGSI BANTUAN & AKUISISI CITRA LANGSUNG
 # ==============================================================================
+@st.cache_data
+def load_default_image() -> np.ndarray:
+    candidates = [
+        os.path.join("assets", "foto_telur.jpg"),
+        os.path.join("assets", "foto_telur.png"),
+        "foto_telur.jpg",
+    ]
+    for path in candidates:
+        if os.path.exists(path):
+            bgr = cv2.imread(path)
+            if bgr is not None:
+                return cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+    return None
+
+
 def convert_np_to_png_bytes(img_array: np.ndarray) -> bytes:
     pil_img = Image.fromarray(img_array)
     buf = io.BytesIO()
@@ -177,108 +203,88 @@ def convert_np_to_png_bytes(img_array: np.ndarray) -> bytes:
 
 def style_dark_axis(ax, title: str, xlabel: str, ylabel: str):
     ax.set_facecolor("#0F172A")
-    ax.set_title(title, color="#F8FAFC", fontsize=10.5, fontweight="bold", pad=10)
-    ax.set_xlabel(xlabel, color="#94A3B8", fontsize=9)
-    ax.set_ylabel(ylabel, color="#94A3B8", fontsize=9)
+    ax.set_title(title, color="#F8FAFC", fontsize=10, fontweight="bold", pad=9)
+    ax.set_xlabel(xlabel, color="#94A3B8", fontsize=8.5)
+    ax.set_ylabel(ylabel, color="#94A3B8", fontsize=8.5)
     ax.tick_params(colors="#94A3B8", labelsize=8)
     ax.grid(True, linestyle="--", alpha=0.18, color="#38BDF8")
     for spine in ax.spines.values():
         spine.set_edgecolor("#1E293B")
 
 
-# ==============================================================================
-# HERO HEADER (SVG MINIMALIS)
-# ==============================================================================
-st.markdown(
-    """
-    <div class="hero-banner">
-        <div class="hero-badge">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                <polyline points="21 15 16 10 5 21"></polyline>
-            </svg>
-            PENGOLAHAN CITRA DIGITAL &bull; ANALISIS EKSTRAKSI CIRI
-        </div>
-        <div class="hero-title">Implementasi Segmentasi Citra &amp; Ekstraksi Ciri Objek</div>
-        <p class="hero-subtitle">
-            Alur Komputasi: Akuisisi Citra &rarr; Preprocessing (Grayscale &amp; Histogram Equalization) &rarr; Segmentasi HSV-Otsu &rarr; Morfologi &rarr; Ekstraksi Ciri Warna &amp; Bentuk
-        </p>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+img_rgb = load_default_image()
+if img_rgb is None:
+    st.error("File citra `assets/foto_telur.jpg` tidak ditemukan. Pastikan file tersebut berada di dalam folder `assets/`.")
+    st.stop()
 
 
 # ==============================================================================
-# SIDEBAR: KONTROL PARAMETER PIPELINE
+# SIDEBAR: NAVBAR MODUL & KONTROL PARAMETER PIPELINE
 # ==============================================================================
 st.sidebar.markdown(
     """
-    <div style="display:flex; align-items:center; gap:8px; margin-bottom:0.75rem; padding-bottom:0.5rem; border-bottom:1px solid #1E293B;">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line>
-            <line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line>
-            <line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line>
-            <line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line>
-            <line x1="17" y1="16" x2="23" y2="16"></line>
-        </svg>
-        <span style="font-weight:700; font-size:1rem; color:#F8FAFC;">Kontrol Parameter</span>
+    <div style="display:flex; align-items:center; gap:10px; padding:0.25rem 0 0.75rem 0; border-bottom:1px solid #1E293B; margin-bottom:0.75rem;">
+        <div style="background:#2563EB; width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+                <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+                <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+                <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
+            </svg>
+        </div>
+        <div>
+            <div style="font-weight:700; font-size:0.98rem; color:#F8FAFC; line-height:1.1;">PCD Vision Lab</div>
+            <div style="font-size:0.72rem; color:#60A5FA;">Ekstraksi Ciri Objek</div>
+        </div>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-# 1. Sumber Citra
-st.sidebar.subheader("01. Akuisisi Citra")
-input_mode = st.sidebar.radio(
-    "Sumber Citra Uji:",
-    ["Citra Default (Objek Telur)", "Unggah Citra Baru"],
+st.sidebar.subheader("Navigasi Modul")
+active_page = st.sidebar.radio(
+    "Pilih halaman analisis:",
+    [
+        "01. Ringkasan & Akuisisi Citra",
+        "02. Preprocessing & Histogram",
+        "03. Segmentasi & Morfologi",
+        "04. Ekstraksi Ciri & Laporan",
+    ],
+    label_visibility="collapsed",
+)
+
+st.sidebar.divider()
+st.sidebar.subheader("Parameter Preprocessing")
+median_ksize = st.sidebar.select_slider(
+    "Kernel Median Blur (Reduksi Noise)",
+    options=[1, 3, 5, 7, 9, 11],
+    value=7,
+    help="Nilai 1 = tanpa filter. Nilai lebih besar meredam tekstur alas & pori cangkang.",
+)
+
+eq_method = st.sidebar.selectbox(
+    "Metode Histogram Equalization",
+    ["Global Histogram Equalization", "CLAHE (Adaptive Equalization)"],
     index=0,
 )
 
-img_rgb = None
-DEFAULT_PATH = os.path.join("assets", "foto_telur.jpg")
-
-if input_mode == "Citra Default (Objek Telur)":
-    if os.path.exists(DEFAULT_PATH):
-        img_bgr_raw = cv2.imread(DEFAULT_PATH)
-        img_rgb = cv2.cvtColor(img_bgr_raw, cv2.COLOR_BGR2RGB)
-    else:
-        st.sidebar.warning(
-            f"File `{DEFAULT_PATH}` tidak ditemukan. Pastikan gambar tersimpan di folder `assets/`."
-        )
-else:
-    uploaded_file = st.sidebar.file_uploader(
-        "Pilih file citra (JPG/PNG)", type=["jpg", "jpeg", "png"]
-    )
-    if uploaded_file is not None:
-        pil_image = Image.open(uploaded_file).convert("RGB")
-        img_rgb = np.array(pil_image)
-
-if img_rgb is None:
-    st.info("Silakan sediakan `assets/foto_telur.jpg` atau unggah file gambar melalui panel kiri.")
-    st.stop()
-
-st.sidebar.divider()
-
-# 2. Parameter Preprocessing
-st.sidebar.subheader("02. Preprocessing")
-median_ksize = st.sidebar.select_slider(
-    "Kernel Median Blur (Reduksi Noise)",
-    options=[3, 5, 7, 9, 11],
-    value=7,
+clahe_clip = st.sidebar.slider(
+    "CLAHE Clip Limit",
+    min_value=1.0,
+    max_value=8.0,
+    value=2.5,
+    step=0.5,
+    disabled=(eq_method == "Global Histogram Equalization"),
 )
 
-st.sidebar.divider()
-
-# 3. Parameter Segmentasi
-st.sidebar.subheader("03. Segmentasi (Kanal S - HSV)")
-seg_mode = st.sidebar.radio(
-    "Metode Thresholding:",
+st.sidebar.subheader("Parameter Segmentasi (HSV)")
+seg_mode = st.sidebar.selectbox(
+    "Metode Thresholding (Kanal S)",
     ["Auto Otsu Thresholding", "Manual Threshold"],
     index=0,
 )
+
 manual_thresh = st.sidebar.slider(
     "Nilai Ambang Manual (0–255)",
     min_value=0,
@@ -287,10 +293,7 @@ manual_thresh = st.sidebar.slider(
     disabled=(seg_mode == "Auto Otsu Thresholding"),
 )
 
-st.sidebar.divider()
-
-# 4. Parameter Morfologi
-st.sidebar.subheader("04. Operasi Morfologi")
+st.sidebar.subheader("Parameter Morfologi")
 close_ksize = st.sidebar.slider(
     "Kernel Closing (Tutup Lubang Kilau)",
     min_value=3,
@@ -299,7 +302,7 @@ close_ksize = st.sidebar.slider(
     step=2,
 )
 open_ksize = st.sidebar.slider(
-    "Kernel Opening (Bersihkan Latar)",
+    "Kernel Opening (Hapus Noise Latar)",
     min_value=3,
     max_value=25,
     value=9,
@@ -308,17 +311,27 @@ open_ksize = st.sidebar.slider(
 
 
 # ==============================================================================
-# EKSEKUSI PIPELINE PENGOLAHAN CITRA DIGITAL
+# EKSEKUSI PIPELINE PENGOLAHAN CITRA (TERHUBUNG DINAMIS KE SEMUA KONTROL)
 # ==============================================================================
 img_bgr = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR)
 
-# Tahap 1: Preprocessing
-img_gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
-img_hist_eq = cv2.equalizeHist(img_gray)
-img_blur_bgr = cv2.medianBlur(img_bgr, median_ksize)
+# 1. Filtering terlebih dahulu agar perubahan kernel langsung memengaruhi histogram
+if median_ksize > 1:
+    img_filtered_bgr = cv2.medianBlur(img_bgr, median_ksize)
+else:
+    img_filtered_bgr = img_bgr.copy()
 
-# Tahap 2: Segmentasi via HSV Saturation + Thresholding
-img_hsv = cv2.cvtColor(img_blur_bgr, cv2.COLOR_BGR2HSV)
+# 2. Konversi Grayscale & Histogram Equalization / CLAHE
+img_gray = cv2.cvtColor(img_filtered_bgr, cv2.COLOR_BGR2GRAY)
+
+if eq_method == "Global Histogram Equalization":
+    img_hist_eq = cv2.equalizeHist(img_gray)
+else:
+    clahe = cv2.createCLAHE(clipLimit=clahe_clip, tileGridSize=(8, 8))
+    img_hist_eq = clahe.apply(img_gray)
+
+# 3. Segmentasi via Kanal Saturation (HSV)
+img_hsv = cv2.cvtColor(img_filtered_bgr, cv2.COLOR_BGR2HSV)
 s_channel = img_hsv[:, :, 1]
 
 if seg_mode == "Auto Otsu Thresholding":
@@ -330,7 +343,7 @@ else:
         s_channel, manual_thresh, 255, cv2.THRESH_BINARY
     )
 
-# Tahap 3: Operasi Morfologi
+# 4. Operasi Morfologi (Closing -> Opening -> Kontur Terbesar)
 kernel_close = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (close_ksize, close_ksize))
 mask_closed = cv2.morphologyEx(mask_raw, cv2.MORPH_CLOSE, kernel_close)
 
@@ -340,24 +353,24 @@ mask_clean = cv2.morphologyEx(mask_closed, cv2.MORPH_OPEN, kernel_open)
 contours, _ = cv2.findContours(mask_clean, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
 if len(contours) == 0:
-    st.error("Objek tidak terdeteksi. Turunkan nilai threshold manual pada panel parameter.")
+    st.error("Objek tidak terdeteksi pada nilai ambang ini. Turunkan nilai Manual Threshold di sidebar.")
     st.stop()
 
 egg_contour = max(contours, key=cv2.contourArea)
 mask_final = np.zeros_like(mask_clean)
 cv2.drawContours(mask_final, [egg_contour], -1, 255, thickness=cv2.FILLED)
 
-# Tahap 4: Ekstraksi Ciri Warna (Mean R, Mean G, Mean B pada citra asli)
+# 5. Ekstraksi Ciri Warna (Mean R, Mean G, Mean B pada citra asli)
 mean_r, mean_g, mean_b, _ = cv2.mean(img_rgb, mask=mask_final)
 
-# Tahap 5: Ekstraksi Ciri Bentuk
+# 6. Ekstraksi Ciri Bentuk
 area = cv2.contourArea(egg_contour)
 perimeter = cv2.arcLength(egg_contour, True)
 x, y, w, h = cv2.boundingRect(egg_contour)
 aspect_ratio = float(w) / h if h > 0 else 0.0
 circularity = (4 * np.pi * area) / (perimeter ** 2) if perimeter > 0 else 0.0
 
-# Visualisasi Hasil Segmentasi & Overlay Kontur (Tanpa Titik Biru Centroid)
+# Visualisasi Hasil Segmentasi & Kontur (Tanpa Titik Biru Centroid)
 segmented_egg = cv2.bitwise_and(img_rgb, img_rgb, mask=mask_final)
 img_overlay = img_rgb.copy()
 cv2.drawContours(img_overlay, [egg_contour], -1, (0, 255, 128), 4)
@@ -365,141 +378,239 @@ cv2.rectangle(img_overlay, (x, y), (x + w, y + h), (56, 189, 248), 3)
 
 
 # ==============================================================================
-# NAVIGASI UTAMA BERBASIS TAB
+# TOP HEADER BANNER
 # ==============================================================================
-tab1, tab2, tab3 = st.tabs(
-    [
-        "01. Preprocessing & Segmentasi",
-        "02. Isolasi Objek & Kontur",
-        "03. Ekstraksi Ciri & Laporan",
-    ]
+st.markdown(
+    f"""
+    <div class="top-header">
+        <div>
+            <div class="header-tag">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2.2">
+                    <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                TUGAS INDIVIDU PENGOLAHAN CITRA DIGITAL
+            </div>
+            <div class="header-title">Implementasi Pengolahan Citra Digital &amp; Ekstraksi Ciri Objek</div>
+            <p class="header-desc">Objek Uji: Telur Ayam Negeri &bull; Dimensi Citra: {img_rgb.shape[1]} &times; {img_rgb.shape[0]} px &bull; Ruang Warna: RGB &amp; HSV</p>
+        </div>
+        <div class="status-pill">
+            <div style="color:#60A5FA; font-weight:600;">Status Pipeline Aktif</div>
+            <div>Threshold S: <b>{thresh_used:.1f}</b> | Closing: <b>{close_ksize}px</b></div>
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
 
-# ------------------------------------------------------------------------------
-# TAB 1: PREPROCESSING & SEGMENTASI
-# ------------------------------------------------------------------------------
-with tab1:
+
+# ==============================================================================
+# HALAMAN 01: RINGKASAN & AKUISISI CITRA
+# ==============================================================================
+if active_page == "01. Ringkasan & Akuisisi Citra":
     st.markdown(
         """
-        <div class="section-header">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-                <polyline points="2 17 12 22 22 17"></polyline>
-                <polyline points="2 12 12 17 22 12"></polyline>
+        <div class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
             </svg>
-            Matriks Transformasi Tahapan Pengolahan Citra
+            Akuisisi Citra Mandiri &amp; Ringkasan Ekstraksi Ciri
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    st.info(
-        f"Segmentasi aktif menggunakan kanal Saturation (HSV) dengan nilai ambang Threshold = {thresh_used:.1f} ({seg_mode}). "
-        f"Resolusi citra masukan: {img_rgb.shape[1]} x {img_rgb.shape[0]} piksel."
-    )
-
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.image(img_rgb, caption="Tahap 1 — Citra Asli (RGB)", use_container_width=True)
-        st.image(s_channel, caption="Tahap 4 — Ekstraksi Kanal Saturation (HSV)", use_container_width=True)
-    with col2:
-        st.image(img_gray, caption="Tahap 2 — Preprocessing: Grayscale", use_container_width=True)
-        st.image(mask_raw, caption="Tahap 5 — Mask Biner Awal (Thresholding)", use_container_width=True)
-    with col3:
-        st.image(img_hist_eq, caption="Tahap 3 — Preprocessing: Histogram Equalization", use_container_width=True)
-        st.image(mask_final, caption="Tahap 6 — Mask Final (Morfologi Closing & Opening)", use_container_width=True)
+    k1, k2, k3, k4 = st.columns(4)
+    k1.metric("Resolusi Citra", f"{img_rgb.shape[1]} x {img_rgb.shape[0]} px")
+    k2.metric("Mean RGB Objek", f"{mean_r:.0f}, {mean_g:.0f}, {mean_b:.0f}")
+    k3.metric("Luas Objek (Area)", f"{area:,.0f} px²")
+    k4.metric("Circularity", f"{circularity:.4f}")
 
     st.markdown("<br>", unsafe_allow_html=True)
+    col_a, col_b, col_c = st.columns(3)
+    with col_a:
+        st.image(img_rgb, caption="1. Citra Asli (RGB)", use_container_width=True)
+    with col_b:
+        st.image(segmented_egg, caption="2. Hasil Segmentasi & Morfologi", use_container_width=True)
+    with col_c:
+        st.image(img_overlay, caption="3. Deteksi Kontur & Bounding Box", use_container_width=True)
+
+
+# ==============================================================================
+# HALAMAN 02: PREPROCESSING & HISTOGRAM
+# ==============================================================================
+elif active_page == "02. Preprocessing & Histogram":
     st.markdown(
         """
-        <div class="section-header">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <div class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2">
                 <line x1="18" y1="20" x2="18" y2="10"></line>
                 <line x1="12" y1="20" x2="12" y2="4"></line>
                 <line x1="6" y1="20" x2="6" y2="14"></line>
             </svg>
-            Analisis Distribusi Intensitas Piksel (Histogram)
+            Tahap Preprocessing: Grayscale, Histogram Equalization &amp; Analisis Distribusi
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    fig_hist, ax_hist = plt.subplots(1, 2, figsize=(12, 3.6))
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.image(
+            img_gray,
+            caption=f"Citra Grayscale (Median Blur {median_ksize}x{median_ksize})",
+            use_container_width=True,
+        )
+    with c2:
+        st.image(
+            img_hist_eq,
+            caption=f"Hasil {eq_method}",
+            use_container_width=True,
+        )
+    with c3:
+        st.image(
+            s_channel,
+            caption="Kanal Saturation (HSV) untuk Segmentasi",
+            use_container_width=True,
+        )
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
+            Grafik Histogram Dinamis (Responsif Terhadap Kontrol Parameter)
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    fig_hist, ax_hist = plt.subplots(1, 3, figsize=(15, 3.8))
     fig_hist.patch.set_facecolor("#090D16")
 
+    # Histogram 1: Grayscale setelah Median Blur
     ax_hist[0].hist(img_gray.ravel(), bins=256, range=(0, 256), color="#38BDF8", alpha=0.85)
-    style_dark_axis(ax_hist[0], "Distribusi Intensitas Grayscale Asli", "Intensitas Piksel (0–255)", "Frekuensi Piksel")
+    style_dark_axis(
+        ax_hist[0],
+        f"1. Histogram Grayscale (Blur={median_ksize})",
+        "Intensitas (0–255)",
+        "Jumlah Piksel",
+    )
 
+    # Histogram 2: Hasil Equalization / CLAHE
     ax_hist[1].hist(img_hist_eq.ravel(), bins=256, range=(0, 256), color="#2563EB", alpha=0.9)
-    style_dark_axis(ax_hist[1], "Distribusi Setelah Histogram Equalization", "Intensitas Piksel (0–255)", "Frekuensi Piksel")
+    style_dark_axis(
+        ax_hist[1],
+        f"2. Histogram {eq_method.split()[0]}",
+        "Intensitas (0–255)",
+        "Jumlah Piksel",
+    )
+
+    # Histogram 3: Kanal Saturation + Garis Ambang Threshold Aktif
+    ax_hist[2].hist(s_channel.ravel(), bins=256, range=(0, 256), color="#10B981", alpha=0.8)
+    ax_hist[2].axvline(
+        thresh_used,
+        color="#F59E0B",
+        linestyle="--",
+        linewidth=2,
+        label=f"Threshold = {thresh_used:.1f}",
+    )
+    ax_hist[2].legend(facecolor="#0F172A", edgecolor="#334155", labelcolor="#F8FAFC", fontsize=8)
+    style_dark_axis(
+        ax_hist[2],
+        "3. Histogram Kanal Saturation & Threshold",
+        "Nilai Saturasi (0–255)",
+        "Jumlah Piksel",
+    )
 
     plt.tight_layout()
     st.pyplot(fig_hist)
 
-# ------------------------------------------------------------------------------
-# TAB 2: HASIL SEGMENTASI & OVERLAY KONTUR
-# ------------------------------------------------------------------------------
-with tab2:
+
+# ==============================================================================
+# HALAMAN 03: SEGMENTASI & OPERASI MORFOLOGI
+# ==============================================================================
+elif active_page == "03. Segmentasi & Morfologi":
     st.markdown(
         """
-        <div class="section-header">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+        <div class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2">
+                <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                <polyline points="2 17 12 22 22 17"></polyline>
+                <polyline points="2 12 12 17 22 12"></polyline>
             </svg>
-            Validasi Area Objek &amp; Geometri Kontur
+            Transformasi Mask Biner: Thresholding ke Operasi Morfologi
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    c_left, c_right = st.columns(2)
-    with c_left:
+    m1, m2, m3 = st.columns(3)
+    with m1:
         st.image(
-            segmented_egg,
-            caption="Citra Objek Terisolasi (Region of Interest untuk Ekstraksi Mean RGB)",
+            mask_raw,
+            caption=f"1. Mask Awal (Threshold S = {thresh_used:.1f})",
             use_container_width=True,
         )
+    with m2:
+        st.image(
+            mask_closed,
+            caption=f"2. Setelah Closing ({close_ksize}x{close_ksize}) — Lubang Kilau Tertutup",
+            use_container_width=True,
+        )
+    with m3:
+        st.image(
+            mask_final,
+            caption=f"3. Mask Final Setelah Opening ({open_ksize}x{open_ksize})",
+            use_container_width=True,
+        )
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    o1, o2 = st.columns(2)
+    with o1:
+        st.image(segmented_egg, caption="Objek Terisolasi (Area Perhitungan RGB)", use_container_width=True)
         st.download_button(
             label="Unduh Mask Biner Final (.PNG)",
             data=convert_np_to_png_bytes(mask_final),
-            file_name="mask_final_objek.png",
+            file_name="mask_final_telur.png",
             mime="image/png",
             use_container_width=True,
         )
-
-    with c_right:
-        st.image(
-            img_overlay,
-            caption="Overlay Kontur Eksternal (Hijau) & Bounding Box (Biru Cyan)",
-            use_container_width=True,
-        )
+    with o2:
+        st.image(img_overlay, caption="Overlay Kontur Eksternal (Hijau) & Bounding Box (Biru)", use_container_width=True)
         st.download_button(
             label="Unduh Visualisasi Kontur (.PNG)",
             data=convert_np_to_png_bytes(img_overlay),
-            file_name="overlay_kontur_objek.png",
+            file_name="overlay_kontur_telur.png",
             mime="image/png",
             use_container_width=True,
         )
 
-# ------------------------------------------------------------------------------
-# TAB 3: DASHBOARD EKSTRAKSI CIRI WARNA & BENTUK
-# ------------------------------------------------------------------------------
-with tab3:
+
+# ==============================================================================
+# HALAMAN 04: EKSTRAKSI CIRI & EKSPOR LAPORAN
+# ==============================================================================
+elif active_page == "04. Ekstraksi Ciri & Laporan":
     st.markdown(
         """
-        <div class="section-header">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <div class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2">
                 <circle cx="13.5" cy="6.5" r=".5"></circle><circle cx="17.5" cy="10.5" r=".5"></circle>
                 <circle cx="8.5" cy="7.5" r=".5"></circle><circle cx="6.5" cy="12.5" r=".5"></circle>
                 <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path>
             </svg>
-            Ekstraksi Ciri Warna (Kanal RGB Citra Asli pada Area Objek)
+            Ekstraksi Ciri Warna (Mean R, Mean G, Mean B pada Area Objek)
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    w1, w2, w3, w4 = st.columns([1, 1, 1, 1.3])
+    w1, w2, w3, w4 = st.columns([1, 1, 1, 1.35])
     w1.metric("Mean R (Red)", f"{mean_r:.2f}")
     w2.metric("Mean G (Green)", f"{mean_g:.2f}")
     w3.metric("Mean B (Blue)", f"{mean_b:.2f}")
@@ -527,7 +638,7 @@ with tab3:
                     flex-shrink: 0;">
                 </div>
                 <div>
-                    <div style="font-size:0.78rem; color:#94A3B8; font-weight:500;">Representasi Warna Objek</div>
+                    <div style="font-size:0.78rem; color:#94A3B8; font-weight:500;">Warna Rata-rata Objek</div>
                     <div style="font-size:1.05rem; color:#F8FAFC; font-weight:700; letter-spacing:0.04em;">{hex_color.upper()}</div>
                 </div>
             </div>
@@ -538,13 +649,13 @@ with tab3:
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown(
         """
-        <div class="section-header">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <div class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2">
                 <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"></polygon>
                 <line x1="12" y1="22" x2="12" y2="15.5"></line>
                 <polyline points="22 8.5 12 15.5 2 8.5"></polyline>
             </svg>
-            Ekstraksi Ciri Bentuk (Parameter Geometri Kontur)
+            Ekstraksi Ciri Bentuk (Area, Perimeter, Aspect Ratio, Circularity)
         </div>
         """,
         unsafe_allow_html=True,
@@ -553,20 +664,20 @@ with tab3:
     b1, b2, b3, b4 = st.columns(4)
     b1.metric("Area", f"{area:,.2f} px²")
     b2.metric("Perimeter", f"{perimeter:,.2f} px")
-    b3.metric("Aspect Ratio", f"{aspect_ratio:.4f}", help=f"Dimensi Bounding Box: {w} x {h} piksel")
-    b4.metric("Circularity", f"{circularity:.4f}", help="Indeks kebulatan (1.0000 = lingkaran sempurna)")
+    b3.metric("Aspect Ratio", f"{aspect_ratio:.4f}", help=f"Lebar = {w} px, Tinggi = {h} px")
+    b4.metric("Circularity", f"{circularity:.4f}", help="1.0000 = Lingkaran Sempurna")
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown(
         """
-        <div class="section-header">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <div class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                 <polyline points="14 2 14 8 20 8"></polyline>
                 <line x1="16" y1="13" x2="8" y2="13"></line>
                 <line x1="16" y1="17" x2="8" y2="17"></line>
             </svg>
-            Ringkasan Kuantitatif Hasil Ekstraksi Ciri
+            Tabel Hasil Ekstraksi Ciri untuk Laporan
         </div>
         """,
         unsafe_allow_html=True,
@@ -588,8 +699,8 @@ with tab3:
 
     csv_data = df_hasil.to_csv(index=False).encode("utf-8")
     st.download_button(
-        label="Ekspor Hasil Ekstraksi Ciri (.CSV)",
+        label="Ekspor Tabel Ekstraksi Ciri (.CSV)",
         data=csv_data,
-        file_name="hasil_ekstraksi_ciri_objek.csv",
+        file_name="hasil_ekstraksi_ciri_telur.csv",
         mime="text/csv",
     )
